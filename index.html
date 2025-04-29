@@ -64,7 +64,7 @@
           const seminarDate = new Date(seminar.開催日時);
           const count = parseInt(seminar.登録者数.toString().trim());
           const limit = parseInt(seminar.定員.toString().trim());
-          const url = seminar["LINEリンクURL"];
+          const url = seminar["URL"];
 
           let statusText = "";
           if (now > seminarDate) {
