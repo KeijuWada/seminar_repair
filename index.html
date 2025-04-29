@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>セミナー予約</title>
+  <style>
+    body { font-family: sans-serif; }
+
+    .seminar-box {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .seminar-time {
+      font-size: 18px;
+    }
+
+    .reserve-btn {
+      display: inline-flex;
+      align-items: center;
+      background-color: #00c300;
+      color: white;
+      padding: 8px 16px;
+      font-weight: bold;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 16px;
+    }
+
+    .reserve-btn img {
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
+    }
+
+    .status-text {
+      font-size: 16px;
+      font-weight: bold;
+      color: red;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- !ここがJavaScriptがHTMLを差し込む場所 -->
+  <div id="seminar-list"></div>
+
+  <script>
+    const apiUrl = "https://script.google.com/macros/s/AKfycbw5jNhKMPG4d974_X1d2fTk7mRo-268XesBld4wp79cpK5csaiFjFONdUH04B3PM9Q/exec";
+
+    const params = new URLSearchParams(window.location.search);
+    const targetSource = params.get("lp") || "メルマガ";
+    const targetSheet = "LP_" + targetSource;
+
+    fetch(apiUrl)
+      .then(response => response.json())
+      .then(data => {
+        const container = document.getElementById("seminar-list");
+        const now = new Date();
+        const filteredData = data.filter(item => item["シート名"] === targetSheet);
+
+        filteredData.forEach(seminar => {
+          const seminarDate = new Date(seminar.開催日時);
+          const count = parseInt(seminar.登録者数.toString().trim());
+          const limit = parseInt(seminar.定員.toString().trim());
+          const url = seminar["LINEリンクURL"];
+
+          let statusText = "";
+          if (now > seminarDate) {
+            statusText = `<span class="status-text">受付終了しました</span>`;
+          } else if (count >= limit) {
+            statusText = `<span class="status-text">満員御礼</span>`;
+          } else {
+            statusText = `
+              <a href="${url}" target="_blank" class="reserve-btn">
+                <img src="https://scdn.line-apps.com/n/line_add_friends/btn/ja.png" alt="LINE" />
+                この日程を予約する
+              </a>
+            `;
+          }
+
+          const html = `
+            <div class="seminar-box">
+              <div class="seminar-time">
+                <strong>${seminar.タイトル}</strong>（${seminar.開催日時}）
+              </div>
+              <div>${statusText}</div>
+            </div>
+          `;
+          container.insertAdjacentHTML("beforeend", html);
+        });
+      })
+      .catch(err => {
+        console.error("データ取得失敗:", err);
+      });
+  </script>
+</body>
+</html>
